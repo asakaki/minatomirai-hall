@@ -1,0 +1,156 @@
+:root {
+  --bar: #5b6b7d;
+  --bar-dark: #4a5868;
+  --ink: #2a2f3a;
+  --sub: #5b6770;
+  --line: #cbd2da;
+  --bg: #f4f6f8;
+  --accent: #2f6fb0;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Hiragino Sans", "Meiryo", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+/* ===== ヘッダー / タブ ===== */
+.appbar { background: var(--bar); color: #fff; }
+.appbar-inner {
+  display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+  padding: 14px 20px 10px;
+}
+.appbar h1 { font-size: 18px; margin: 0; font-weight: 700; }
+.badge {
+  font-size: 12px; background: rgba(255, 255, 255, .15);
+  padding: 3px 10px; border-radius: 999px;
+}
+.tabs { display: flex; gap: 2px; padding: 0 12px; }
+.tab {
+  appearance: none; border: 0; cursor: pointer;
+  background: var(--bar-dark); color: #d8dee6;
+  padding: 10px 18px; font-size: 14px; font-weight: 600;
+  border-radius: 8px 8px 0 0;
+}
+.tab.active { background: var(--bg); color: var(--ink); }
+
+/* ===== パネル ===== */
+.panel { padding: 20px; max-width: 1400px; margin: 0 auto; }
+.section-title { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+.hint { font-size: 13px; color: var(--sub); margin: 0 0 14px; }
+
+.card {
+  background: #fff; border: 1px solid var(--line);
+  border-radius: 10px; padding: 16px; margin-bottom: 16px;
+}
+
+/* ===== 凡例 ===== */
+.legend { display: flex; flex-wrap: wrap; gap: 14px; }
+.legend-item { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+.swatch {
+  width: 20px; height: 20px; border: 1px solid var(--line); border-radius: 4px;
+}
+.swatch.blocked {
+  background: repeating-linear-gradient(45deg, #4b5563, #4b5563 4px, #39424f 4px, #39424f 8px);
+}
+
+/* ===== フォーム ===== */
+.seat-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 12px; color: var(--sub); font-weight: 600; }
+.field select {
+  font-size: 14px; padding: 7px 10px; border: 1px solid var(--line);
+  border-radius: 7px; background: #fff; min-width: 92px;
+}
+.btn {
+  appearance: none; cursor: pointer; border: 1px solid transparent;
+  padding: 8px 16px; border-radius: 7px; font-size: 14px; font-weight: 600;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-outline { background: #fff; color: var(--accent); border-color: var(--accent); }
+.btn-ghost { background: #eef1f4; color: var(--ink); }
+.btn-danger { background: #fff; color: #c0392b; border-color: #c0392b; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ブラシ（種別選択） */
+.brush { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.brush label {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 12px; font-size: 13px; cursor: pointer; background: #fff;
+}
+.brush input { accent-color: var(--accent); }
+.brush .dot { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--line); }
+.brush .dot.blocked {
+  background: repeating-linear-gradient(45deg, #4b5563, #4b5563 3px, #39424f 3px, #39424f 6px);
+}
+
+.msg {
+  min-height: 20px; font-size: 13px; color: #1a7a3c; font-weight: 600;
+  opacity: 0; transition: opacity .2s; margin-top: 10px;
+}
+.msg.show { opacity: 1; }
+
+/* ===== 座席表 ===== */
+.chart-scroll { overflow-x: auto; padding-bottom: 6px; text-align: center; }
+
+/* PDF/SVG どおり「左バルコニー｜中央席｜右バルコニー」の3ゾーン */
+.hall {
+  display: inline-grid;
+  /* 3階L(外) | 2階L | 中央 | 2階R | 3階R(外) */
+  grid-template-columns: repeat(5, max-content);
+  gap: 26px; align-items: start; text-align: left;
+}
+.zone { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.zone-center { gap: 0; }
+/* 3階サイドなど、小ブロックの横並びクラスタ */
+.balcony-group { display: flex; flex-direction: row; gap: 14px; align-items: flex-start; }
+
+/* ステージ（PDF/SVG どおり上部・中央） */
+.stage {
+  width: max-content; min-width: 420px; margin: 4px auto 20px;
+  background: #cfd6e0; color: #3a4250; text-align: center; font-weight: 700;
+  letter-spacing: .4em; padding: 9px 48px; border-radius: 6px;
+  border: 1px solid #9aa3b0;
+}
+
+.seat-block { margin-bottom: 22px; }
+.seat-block-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; text-align: center; }
+.seat-grid {
+  display: grid;
+  --rowlabel: 48px; --seat: 30px; --aisle: 18px;
+  gap: 2px; width: max-content; margin: 0 auto;
+}
+.aisle { width: var(--aisle); }
+.seat-empty { width: var(--seat); height: var(--seat); }
+.hcell, .rcell { font-size: 10px; color: var(--sub); display: flex; align-items: center; }
+.hcell { justify-content: center; }
+.hcell.col-strong { font-weight: 700; color: var(--ink); }
+.rcell { justify-content: flex-end; padding-right: 6px; font-weight: 600; }
+.corner-cell { font-size: 9px; color: var(--sub); display: flex; align-items: center; justify-content: center; }
+
+.seat {
+  position: relative; width: 30px; height: 30px; padding: 0;
+  border: 1px solid var(--line); background: #fff; border-radius: 3px;
+  font-size: 10px; color: #333; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.seat:not(.readonly):hover { outline: 2px solid var(--accent); outline-offset: -2px; }
+.seat.readonly { cursor: default; }
+.seat .num { pointer-events: none; }
+.seat.is-blocked {
+  background: repeating-linear-gradient(45deg, #4b5563, #4b5563 4px, #39424f 4px, #39424f 8px);
+  color: #fff;
+}
+.seat .corner {
+  position: absolute; top: 1px; left: 1px; width: 8px; height: 8px;
+  border-radius: 1px; border: 1px solid rgba(0, 0, 0, .25);
+}
+
+/* 列グループ間の通路（例：1階の19列／20列の間を空ける） */
+.row-divider {
+  grid-column: 1 / -1; height: 16px;
+}

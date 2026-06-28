@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>コンサートチケット 販売状況管理（パイロット版）</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="appbar">
+    <div class="appbar-inner">
+      <h1>コンサートチケット 販売状況管理</h1>
+      <span class="badge">対象：1〜3階 C席（1階 1〜29列 / 2階・3階 各1〜6列）</span>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button type="button" class="tab" data-tab="chart">座席表表示</button>
+      <button type="button" class="tab" data-tab="sales">販売座席入力</button>
+      <button type="button" class="tab" data-tab="type">座席種別登録</button>
+    </nav>
+  </header>
+
+  <main id="panel" class="panel"></main>
+
+  <script src="app.js"></script>
+</body>
+</html>
