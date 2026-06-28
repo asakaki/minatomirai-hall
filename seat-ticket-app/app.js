@@ -49,12 +49,12 @@ const SEAT_CONFIG = [
   // 2階 P席（126）：パイプオルガンを囲む変則配置（上=6列、席番号は右→左の通し）
   {
     zone: "center", placement: "top", floor: "2階", block: "P",
-    seatCols: 36, rows: [6, 5, 4, 3, 2, 1], rowSeats: P_ROW_SEATS, refRow: 6, // 6列(上端)を基準
+    seatCols: 36, rows: [6, 5, 4, 3, 2, 1], rowSeats: P_ROW_SEATS, refRow: 6, refLine: "top", // 6列(上端)
   },
   // 1階 C席：PDF/SVG どおり 1-12 / 13-24 / 25-36 の3ブロック（間に通路）、19/20列に区切り
   {
     zone: "center", floor: "1階", block: "C", rows: rangeN(1, 29), seats: rangeN(1, 36),
-    colGroups: [[1, 12], [13, 24], [25, 36]], rowDividerAfter: [19],
+    colGroups: [[1, 12], [13, 24], [25, 36]], rowDividerAfter: [19], refRow: 1, refLine: "front",
   },
   // 2階 C席（186）：変則（1-3列=席4-29 / 4-6列=席1-32 / 7列=席11-22、席1が左、10/22後に通路）
   {
@@ -69,8 +69,8 @@ const SEAT_CONFIG = [
 
   /* --- 2階 左バルコニー（zone: left）：PDF/SVG どおり ---
    * LA 65席（4席幅・階段状の23列） / LB〜LF 各24席（3席幅 × 8列） */
-  { zone: "left", floor: "2階", block: "LA", rows: rangeN(1, 23), colRanges: LA_COL_RANGES, refRow: 1 }, // 計65（変則）/ 席1(上端)を基準
-  { zone: "left", floor: "2階", block: "LB", rows: rangeN(1, 8), seats: rangeN(1, 3) },
+  { zone: "left", floor: "2階", block: "LA", rows: rangeN(1, 23), colRanges: LA_COL_RANGES, refRow: 1, refLine: "top" }, // 計65（変則）/ 席1(上端)
+  { zone: "left", floor: "2階", block: "LB", rows: rangeN(1, 8), seats: rangeN(1, 3), refRow: 1, refLine: "front" },
   { zone: "left", floor: "2階", block: "LC", rows: rangeN(1, 8), seats: rangeN(1, 3) },
   { zone: "left", floor: "2階", block: "LD", rows: rangeN(1, 8), seats: rangeN(1, 3) },
   { zone: "left", floor: "2階", block: "LE", rows: rangeN(1, 8), seats: rangeN(1, 3) },
@@ -78,22 +78,22 @@ const SEAT_CONFIG = [
 
   /* --- 2階 右バルコニー（zone: right）：左の鏡写し ---
    * 席番号は中央寄り＝左端から 1,2,3,4。列番号は上下逆（RA: 上23→下1 / RB〜RF: 上8→下1）。 */
-  { zone: "right", floor: "2階", block: "RA", rows: rangeN(1, 23).reverse(), colRanges: RA_COL_RANGES, refRow: 23 }, // 計65（変則）/ 席23(上端)を基準
-  { zone: "right", floor: "2階", block: "RB", rows: rangeN(1, 8).reverse(), seats: rangeN(1, 3) },
+  { zone: "right", floor: "2階", block: "RA", rows: rangeN(1, 23).reverse(), colRanges: RA_COL_RANGES, refRow: 23, refLine: "top" }, // 計65（変則）/ 席23(上端)
+  { zone: "right", floor: "2階", block: "RB", rows: rangeN(1, 8).reverse(), seats: rangeN(1, 3), refRow: 8, refLine: "front" },
   { zone: "right", floor: "2階", block: "RC", rows: rangeN(1, 8).reverse(), seats: rangeN(1, 3) },
   { zone: "right", floor: "2階", block: "RD", rows: rangeN(1, 8).reverse(), seats: rangeN(1, 3) },
   { zone: "right", floor: "2階", block: "RE", rows: rangeN(1, 8).reverse(), seats: rangeN(1, 3) },
   { zone: "right", floor: "2階", block: "RF", rows: rangeN(1, 8).reverse(), seats: rangeN(1, 3) },
 
   /* --- 3階 左バルコニー（zone: outerL = 2階Lの外側）：上から LA→LE の縦並び。LA〜LD 各8席 / LE 7席（単列） --- */
-  { zone: "outerL", floor: "3階", block: "LA", rows: rangeN(1, 8), seats: [1] },
+  { zone: "outerL", floor: "3階", block: "LA", rows: rangeN(1, 8), seats: [1], refRow: 1, refLine: "front" },
   { zone: "outerL", floor: "3階", block: "LB", rows: rangeN(1, 8), seats: [1] },
   { zone: "outerL", floor: "3階", block: "LC", rows: rangeN(1, 8), seats: [1] },
   { zone: "outerL", floor: "3階", block: "LD", rows: rangeN(1, 8), seats: [1] },
   { zone: "outerL", floor: "3階", block: "LE", rows: rangeN(1, 7), seats: [1] },
 
   /* --- 3階 右バルコニー（zone: outerR = 2階Rの外側）：上から RA→RE。列番号は上下逆 --- */
-  { zone: "outerR", floor: "3階", block: "RA", rows: rangeN(1, 8).reverse(), seats: [1] },
+  { zone: "outerR", floor: "3階", block: "RA", rows: rangeN(1, 8).reverse(), seats: [1], refRow: 8, refLine: "front" },
   { zone: "outerR", floor: "3階", block: "RB", rows: rangeN(1, 8).reverse(), seats: [1] },
   { zone: "outerR", floor: "3階", block: "RC", rows: rangeN(1, 8).reverse(), seats: [1] },
   { zone: "outerR", floor: "3階", block: "RD", rows: rangeN(1, 8).reverse(), seats: [1] },
@@ -111,24 +111,47 @@ const TYPES = {
 const TYPE_ORDER = ["未設定", "SS", "S", "A", "封鎖"];
 const SOLD = { label: "販売済", color: "#9ca3af", textColor: "#fff" };
 
-/* ---------- 状態管理 ---------- */
+/* ---------- 状態管理（公演ごとにレイヤー分け） ----------
+ * state = {
+ *   concerts: [{ id, name, date, time }],   // 公演一覧
+ *   activeId: <id>,                          // 選択中の公演
+ *   byId: { [id]: { sold:{}, types:{} } },   // 公演ごとの販売・種別データ
+ * } */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
 let state = loadState();
 
+function freshState() {
+  const id = uid();
+  return { concerts: [{ id, name: "公演 1", date: "", time: "" }], activeId: id, byId: { [id]: { sold: {}, types: {} } } };
+}
 function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (s && typeof s === "object" && s.sold && s.types) return s;
+    if (s && s.concerts && s.byId) return s;                 // 新形式
+    if (s && s.sold && s.types) {                            // 旧形式 → 「公演1」へ移行
+      const id = uid();
+      return { concerts: [{ id, name: "公演 1", date: "", time: "" }], activeId: id, byId: { [id]: { sold: s.sold, types: s.types } } };
+    }
   } catch (e) { /* ignore */ }
-  return { sold: {}, types: {} };
+  return freshState();
 }
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+/* 選択中の公演のデータ（sold/types） */
+function activeData() {
+  let d = state.byId[state.activeId];
+  if (!d) { d = { sold: {}, types: {} }; if (state.activeId) state.byId[state.activeId] = d; }
+  return d;
+}
+const activeConcert = () => state.concerts.find((c) => c.id === state.activeId);
+
 /* ---------- ヘルパー ---------- */
 const keyOf = (floor, block, row, num) => `${floor}/${block}/${row}/${num}`;
-const seatTypeOf = (key) => state.types[key] || "未設定";
-const isSold = (key) => !!state.sold[key];
+const seatTypeOf = (key) => activeData().types[key] || "未設定";
+const isSold = (key) => !!activeData().sold[key];
 
 function labelOf(key) {
   const [floor, block, row, num] = key.split("/");
@@ -221,7 +244,10 @@ function buildBlock(cfg, mode) {
   const corner = () => el("corner-cell", transpose ? "" : "列＼番");
   const rowLab = (row) => {
     const rc = el("rcell", transpose ? "" : `${row}列`);
-    if (cfg.refRow === row) rc.classList.add("ref-row");
+    if (cfg.refRow === row) {
+      rc.classList.add("ref-row");
+      rc.dataset.refline = cfg.refLine || "front"; // 整列ライン（top=上端 / front=前方）
+    }
     return rc;
   };
 
@@ -420,42 +446,54 @@ function refreshChart() {
   alignRefRows();
 }
 
-/* refRow を付けた各ゾーンの基準行を同じ高さに揃える（上マージンで調整） */
+/* refRow を付けた基準行を、整列ライン(refline)ごとに同じ高さへ揃える（上マージンで調整）。
+ * 中央ゾーンでステージより後ろのブロック(1階C等)は、ステージごと下げてステージを直上に保つ。 */
 function alignRefRows() {
   const hall = chartHost && chartHost.querySelector(".hall");
   if (!hall) return;
   const refs = [...hall.querySelectorAll(".ref-row")];
   if (refs.length < 2) return;
   const hallTop = hall.getBoundingClientRect().top;
-  const tops = refs.map((r) => r.getBoundingClientRect().top - hallTop); // 各基準行の現在の高さ
-  const maxTop = Math.max(...tops);
-  refs.forEach((r, i) => {
-    const zone = r.closest(".zone");
-    if (zone) zone.style.marginTop = `${maxTop - tops[i]}px`;
+  const groups = {};
+  refs.forEach((r) => { (groups[r.dataset.refline] = groups[r.dataset.refline] || []).push(r); });
+  Object.values(groups).forEach((grp) => {
+    const tops = grp.map((r) => r.getBoundingClientRect().top - hallTop);
+    const maxTop = Math.max(...tops);
+    grp.forEach((r, i) => {
+      const block = r.closest(".seat-block");
+      const zone = r.closest(".zone");
+      const stage = zone && zone.querySelector(".stage");
+      // ステージより後ろのブロックはステージごと下げる（4 = DOCUMENT_POSITION_FOLLOWING）
+      const target = stage && block && (stage.compareDocumentPosition(block) & 4) ? stage : block;
+      if (target) target.style.marginTop = `${maxTop - tops[i]}px`;
+    });
   });
 }
 
-/* ---------- 操作 ---------- */
+/* ---------- 操作（選択中の公演データに対して） ---------- */
 function toggleSold(key) {
-  if (state.sold[key]) delete state.sold[key];
-  else state.sold[key] = true;
+  const d = activeData();
+  if (d.sold[key]) delete d.sold[key];
+  else d.sold[key] = true;
   saveState();
   refreshChart();
-  showMsg(`${labelOf(key)} を ${state.sold[key] ? "販売済" : "未販売"} にしました`);
+  showMsg(`${labelOf(key)} を ${d.sold[key] ? "販売済" : "未販売"} にしました`);
 }
 function applyBrush(key) {
-  if (currentBrush === "未設定") delete state.types[key];
-  else state.types[key] = currentBrush;
+  const d = activeData();
+  if (currentBrush === "未設定") delete d.types[key];
+  else d.types[key] = currentBrush;
   saveState();
   refreshChart();
   showMsg(`${labelOf(key)} → ${TYPES[currentBrush].label}`);
 }
 function showMsg(text) {
   if (!msgEl) return;
-  msgEl.textContent = text;
-  msgEl.classList.add("show");
-  clearTimeout(msgEl._t);
-  msgEl._t = setTimeout(() => msgEl.classList.remove("show"), 2600);
+  const m = msgEl; // タイマー発火時の再描画に備えて要素を捕捉
+  m.textContent = text;
+  m.classList.add("show");
+  clearTimeout(m._t);
+  m._t = setTimeout(() => m.classList.remove("show"), 2600);
 }
 
 /* ===================================================================== */
@@ -583,12 +621,12 @@ function renderSalesTab() {
   actions.style.marginTop = "14px";
   actions.appendChild(button("販売登録", "btn-primary", () => {
     const s = form.get();
-    state.sold[s.key] = true; saveState(); refreshChart();
+    activeData().sold[s.key] = true; saveState(); refreshChart();
     showMsg(`${labelOf(s.key)} を販売済にしました`);
   }));
   actions.appendChild(button("販売取消", "btn-ghost", () => {
     const s = form.get();
-    delete state.sold[s.key]; saveState(); refreshChart();
+    delete activeData().sold[s.key]; saveState(); refreshChart();
     showMsg(`${labelOf(s.key)} を未販売にしました`);
   }));
   card.appendChild(actions);
@@ -658,8 +696,8 @@ function renderTypeTab() {
   actions.appendChild(button("種別を登録", "btn-primary", () => {
     const s = form.get();
     const v = typeField.sel.value;
-    if (v === "未設定") delete state.types[s.key];
-    else state.types[s.key] = v;
+    if (v === "未設定") delete activeData().types[s.key];
+    else activeData().types[s.key] = v;
     saveState(); refreshChart();
     showMsg(`${labelOf(s.key)} → ${TYPES[v].label}`);
   }));
@@ -738,8 +776,11 @@ function importButton() {
     reader.onload = () => {
       try {
         const s = JSON.parse(reader.result);
-        if (!s.sold || !s.types) throw new Error("形式が不正です");
-        state = { sold: s.sold, types: s.types };
+        if (s.concerts && s.byId) state = s;                       // 新形式（公演ごと）
+        else if (s.sold && s.types) {                              // 旧形式 → 取込公演として追加
+          const id = uid();
+          state = { concerts: [{ id, name: "取込公演", date: "", time: "" }], activeId: id, byId: { [id]: { sold: s.sold, types: s.types } } };
+        } else throw new Error("形式が不正です");
         saveState();
         render(currentTab);
       } catch (e) {
@@ -752,8 +793,9 @@ function importButton() {
   return wrap;
 }
 function resetData() {
-  if (!confirm("販売状況と座席種別をすべて消去します。よろしいですか？")) return;
-  state = { sold: {}, types: {} };
+  const c = activeConcert();
+  if (!confirm(`公演「${c ? c.name : ""}」の販売状況と座席種別をすべて消去します。よろしいですか？`)) return;
+  state.byId[state.activeId] = { sold: {}, types: {} };
   saveState();
   render(currentTab);
 }
@@ -769,9 +811,95 @@ function render(tab) {
   panel.innerHTML = "";
   chartHost = null;
   msgEl = null;
+  panel.appendChild(renderConcertBar()); // 公演（レイヤー）選択・管理
   if (tab === "chart") renderChartTab();
   else if (tab === "sales") renderSalesTab();
   else renderTypeTab();
+}
+
+/* ===================================================================== */
+/* 公演（コンサート）レイヤー：選択・追加・編集・削除                     */
+/* ===================================================================== */
+let concertFormMode = null; // null | "add" | "edit"
+
+const concertLabel = (c) =>
+  `${c.name}${c.date ? "（" + c.date + (c.time ? " " + c.time : "") + "）" : c.time ? "（" + c.time + "）" : ""}`;
+
+function labeledInput(labelText, type, value) {
+  const field = el("field");
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  const input = document.createElement("input");
+  input.type = type;
+  input.value = value || "";
+  field.append(label, input);
+  return { field, input };
+}
+
+function renderConcertBar() {
+  const bar = el("card concert-bar");
+  const row = el("concert-row");
+  row.appendChild(el("concert-label", "公演:"));
+
+  const sel = document.createElement("select");
+  sel.className = "concert-select";
+  state.concerts.forEach((c) => {
+    const o = document.createElement("option");
+    o.value = c.id;
+    o.textContent = concertLabel(c);
+    sel.appendChild(o);
+  });
+  sel.value = state.activeId;
+  sel.addEventListener("change", () => { state.activeId = sel.value; concertFormMode = null; saveState(); render(currentTab); });
+  row.appendChild(sel);
+
+  row.appendChild(button("＋ 新規公演", "btn-outline btn-sm", () => { concertFormMode = "add"; render(currentTab); }));
+  row.appendChild(button("編集", "btn-ghost btn-sm", () => { concertFormMode = "edit"; render(currentTab); }));
+  row.appendChild(button("削除", "btn-danger btn-sm", deleteConcert));
+  bar.appendChild(row);
+
+  if (concertFormMode) bar.appendChild(concertForm());
+  return bar;
+}
+
+function concertForm() {
+  const editing = concertFormMode === "edit";
+  const c = editing ? activeConcert() : { name: "", date: "", time: "" };
+  const wrap = el("concert-form");
+  const fName = labeledInput("コンサート名", "text", c.name);
+  const fDate = labeledInput("公演日", "date", c.date);
+  const fTime = labeledInput("開演時間", "time", c.time);
+  fName.input.placeholder = "例：第10回定期演奏会";
+  wrap.append(fName.field, fDate.field, fTime.field);
+
+  const acts = el("actions");
+  acts.appendChild(button(editing ? "更新" : "追加", "btn-primary btn-sm", () => {
+    const name = fName.input.value.trim() || "（無題）";
+    const date = fDate.input.value, time = fTime.input.value;
+    if (editing) {
+      Object.assign(activeConcert(), { name, date, time });
+    } else {
+      const id = uid();
+      state.concerts.push({ id, name, date, time });
+      state.byId[id] = { sold: {}, types: {} };
+      state.activeId = id;
+    }
+    concertFormMode = null; saveState(); render(currentTab);
+  }));
+  acts.appendChild(button("キャンセル", "btn-ghost btn-sm", () => { concertFormMode = null; render(currentTab); }));
+  wrap.appendChild(acts);
+  return wrap;
+}
+
+function deleteConcert() {
+  if (state.concerts.length <= 1) { alert("公演が1つだけのため削除できません。"); return; }
+  const c = activeConcert();
+  if (!confirm(`公演「${c.name}」を削除します。販売・種別データも消えます。よろしいですか？`)) return;
+  delete state.byId[c.id];
+  state.concerts = state.concerts.filter((x) => x.id !== c.id);
+  state.activeId = state.concerts[0].id;
+  concertFormMode = null;
+  saveState(); render(currentTab);
 }
 
 document.getElementById("tabs").addEventListener("click", (e) => {
