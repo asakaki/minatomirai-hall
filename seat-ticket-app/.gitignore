@@ -1,0 +1,7 @@
+# Cloudflare / wrangler のローカル状態（ローカルD1・一時ファイル）
+.wrangler/
+
+# 依存・一時ファイル
+node_modules/
+package-lock.json
+preview.png

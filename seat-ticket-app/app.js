@@ -148,6 +148,42 @@ function activeData() {
 }
 const activeConcert = () => state.concerts.find((c) => c.id === state.activeId);
 
+/* ---------- DB（Cloudflare D1）API クライアント ----------
+ * API が使える環境では D1 に永続化、使えない場合は localStorage にフォールバック */
+const API = {
+  enabled: false,
+  async _req(method, path, body) {
+    const opt = { method, headers: { "content-type": "application/json" } };
+    if (body !== undefined) opt.body = JSON.stringify(body);
+    const res = await fetch("/api" + path, opt);
+    if (!res.ok) throw new Error(`API ${method} ${path} → ${res.status}`);
+    return res.json();
+  },
+  listConcerts() { return this._req("GET", "/concerts"); },
+  createConcert(c) { return this._req("POST", "/concerts", c); },
+  updateConcert(id, c) { return this._req("PATCH", "/concerts/" + id, c); },
+  deleteConcert(id) { return this._req("DELETE", "/concerts/" + id); },
+  getSeats(id) { return this._req("GET", "/seats?concert=" + encodeURIComponent(id)); },
+  putSeat(concert, key, sold, type) { return this._req("PUT", "/seats", { concert, key, sold, type }); },
+  resetSeats(id) { return this._req("DELETE", "/seats?concert=" + encodeURIComponent(id)); },
+  importAll(data) { return this._req("POST", "/import", data); },
+};
+
+/* 選択中の公演の1座席をDB(または localStorage)へ保存 */
+function persistSeat(key) {
+  if (API.enabled) {
+    const d = activeData();
+    API.putSeat(state.activeId, key, !!d.sold[key], d.types[key] || null)
+      .catch((e) => console.error("座席の保存に失敗:", e));
+  } else {
+    saveState();
+  }
+}
+/* API モードで未読み込みの公演の座席を取得 */
+async function ensureSeatsLoaded(id) {
+  if (API.enabled && !state.byId[id]) state.byId[id] = await API.getSeats(id);
+}
+
 /* ---------- ヘルパー ---------- */
 const keyOf = (floor, block, row, num) => `${floor}/${block}/${row}/${num}`;
 const seatTypeOf = (key) => activeData().types[key] || "未設定";
@@ -475,7 +511,7 @@ function toggleSold(key) {
   const d = activeData();
   if (d.sold[key]) delete d.sold[key];
   else d.sold[key] = true;
-  saveState();
+  persistSeat(key);
   refreshChart();
   showMsg(`${labelOf(key)} を ${d.sold[key] ? "販売済" : "未販売"} にしました`);
 }
@@ -483,7 +519,7 @@ function applyBrush(key) {
   const d = activeData();
   if (currentBrush === "未設定") delete d.types[key];
   else d.types[key] = currentBrush;
-  saveState();
+  persistSeat(key);
   refreshChart();
   showMsg(`${labelOf(key)} → ${TYPES[currentBrush].label}`);
 }
@@ -583,12 +619,15 @@ function renderChartTab() {
   // データ管理
   const tools = document.createElement("div");
   tools.className = "card";
+  const storageNote = API.enabled
+    ? "データはサーバー(データベース)に保存され、端末をまたいで共有されます。"
+    : "サーバーに接続できないため、このブラウザにのみ保存されます。";
   tools.innerHTML = '<div class="actions"></div><p class="hint" style="margin:10px 0 0">' +
-    'データはこのブラウザに保存されます。バックアップ/復元や全消去ができます。</p>';
+    storageNote + " バックアップ/復元や、この公演のリセットができます。</p>";
   const actions = tools.querySelector(".actions");
   actions.appendChild(button("エクスポート(JSON)", "btn-outline", exportData));
   actions.appendChild(importButton());
-  actions.appendChild(button("全リセット", "btn-danger", resetData));
+  actions.appendChild(button("この公演をリセット", "btn-danger", resetData));
   panel.appendChild(tools);
 
   // 座席表
@@ -621,12 +660,12 @@ function renderSalesTab() {
   actions.style.marginTop = "14px";
   actions.appendChild(button("販売登録", "btn-primary", () => {
     const s = form.get();
-    activeData().sold[s.key] = true; saveState(); refreshChart();
+    activeData().sold[s.key] = true; persistSeat(s.key); refreshChart();
     showMsg(`${labelOf(s.key)} を販売済にしました`);
   }));
   actions.appendChild(button("販売取消", "btn-ghost", () => {
     const s = form.get();
-    delete activeData().sold[s.key]; saveState(); refreshChart();
+    delete activeData().sold[s.key]; persistSeat(s.key); refreshChart();
     showMsg(`${labelOf(s.key)} を未販売にしました`);
   }));
   card.appendChild(actions);
@@ -698,7 +737,7 @@ function renderTypeTab() {
     const v = typeField.sel.value;
     if (v === "未設定") delete activeData().types[s.key];
     else activeData().types[s.key] = v;
-    saveState(); refreshChart();
+    persistSeat(s.key); refreshChart();
     showMsg(`${labelOf(s.key)} → ${TYPES[v].label}`);
   }));
   brushCard.appendChild(actions);
@@ -755,8 +794,14 @@ function button(text, cls, onClick) {
 }
 
 /* ---------- データ管理 ---------- */
-function exportData() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+async function exportData() {
+  let out = state;
+  if (API.enabled) { // 全公演の座席をDBから集めて書き出す
+    const byId = {};
+    for (const c of state.concerts) byId[c.id] = await API.getSeats(c.id);
+    out = { concerts: state.concerts, activeId: state.activeId, byId };
+  }
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "ticket-seats.json";
@@ -773,15 +818,23 @@ function importButton() {
     const file = input.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
         const s = JSON.parse(reader.result);
-        if (s.concerts && s.byId) state = s;                       // 新形式（公演ごと）
+        let imp;
+        if (s.concerts && s.byId) imp = s;                         // 新形式（公演ごと）
         else if (s.sold && s.types) {                              // 旧形式 → 取込公演として追加
           const id = uid();
-          state = { concerts: [{ id, name: "取込公演", date: "", time: "" }], activeId: id, byId: { [id]: { sold: s.sold, types: s.types } } };
+          imp = { concerts: [{ id, name: "取込公演", date: "", time: "" }], activeId: id, byId: { [id]: { sold: s.sold, types: s.types } } };
         } else throw new Error("形式が不正です");
-        saveState();
+        if (API.enabled) {
+          await API.importAll(imp);                                // DBを置換して読み直し
+          const concerts = await API.listConcerts();
+          state = { concerts, activeId: concerts[0].id, byId: {} };
+          await ensureSeatsLoaded(state.activeId);
+        } else {
+          state = imp; saveState();
+        }
         render(currentTab);
       } catch (e) {
         alert("読み込みに失敗しました: " + e.message);
@@ -796,7 +849,8 @@ function resetData() {
   const c = activeConcert();
   if (!confirm(`公演「${c ? c.name : ""}」の販売状況と座席種別をすべて消去します。よろしいですか？`)) return;
   state.byId[state.activeId] = { sold: {}, types: {} };
-  saveState();
+  if (API.enabled) API.resetSeats(state.activeId).catch((e) => alert("リセットに失敗しました: " + e.message));
+  else saveState();
   render(currentTab);
 }
 
@@ -850,7 +904,12 @@ function renderConcertBar() {
     sel.appendChild(o);
   });
   sel.value = state.activeId;
-  sel.addEventListener("change", () => { state.activeId = sel.value; concertFormMode = null; saveState(); render(currentTab); });
+  sel.addEventListener("change", async () => {
+    state.activeId = sel.value; concertFormMode = null;
+    await ensureSeatsLoaded(state.activeId);
+    if (!API.enabled) saveState();
+    render(currentTab);
+  });
   row.appendChild(sel);
 
   row.appendChild(button("＋ 新規公演", "btn-outline btn-sm", () => { concertFormMode = "add"; render(currentTab); }));
@@ -873,33 +932,47 @@ function concertForm() {
   wrap.append(fName.field, fDate.field, fTime.field);
 
   const acts = el("actions");
-  acts.appendChild(button(editing ? "更新" : "追加", "btn-primary btn-sm", () => {
+  acts.appendChild(button(editing ? "更新" : "追加", "btn-primary btn-sm", async () => {
     const name = fName.input.value.trim() || "（無題）";
     const date = fDate.input.value, time = fTime.input.value;
-    if (editing) {
-      Object.assign(activeConcert(), { name, date, time });
-    } else {
-      const id = uid();
-      state.concerts.push({ id, name, date, time });
-      state.byId[id] = { sold: {}, types: {} };
-      state.activeId = id;
-    }
-    concertFormMode = null; saveState(); render(currentTab);
+    try {
+      if (editing) {
+        Object.assign(activeConcert(), { name, date, time });
+        if (API.enabled) await API.updateConcert(state.activeId, { name, date, time }); else saveState();
+      } else if (API.enabled) {
+        const created = await API.createConcert({ name, date, time });
+        state.concerts.push(created);
+        state.byId[created.id] = { sold: {}, types: {} };
+        state.activeId = created.id;
+      } else {
+        const id = uid();
+        state.concerts.push({ id, name, date, time });
+        state.byId[id] = { sold: {}, types: {} };
+        state.activeId = id;
+        saveState();
+      }
+      concertFormMode = null; render(currentTab);
+    } catch (e) { alert("保存に失敗しました: " + e.message); }
   }));
   acts.appendChild(button("キャンセル", "btn-ghost btn-sm", () => { concertFormMode = null; render(currentTab); }));
   wrap.appendChild(acts);
   return wrap;
 }
 
-function deleteConcert() {
+async function deleteConcert() {
   if (state.concerts.length <= 1) { alert("公演が1つだけのため削除できません。"); return; }
   const c = activeConcert();
   if (!confirm(`公演「${c.name}」を削除します。販売・種別データも消えます。よろしいですか？`)) return;
-  delete state.byId[c.id];
-  state.concerts = state.concerts.filter((x) => x.id !== c.id);
-  state.activeId = state.concerts[0].id;
-  concertFormMode = null;
-  saveState(); render(currentTab);
+  try {
+    if (API.enabled) await API.deleteConcert(c.id);
+    delete state.byId[c.id];
+    state.concerts = state.concerts.filter((x) => x.id !== c.id);
+    state.activeId = state.concerts[0].id;
+    await ensureSeatsLoaded(state.activeId);
+    if (!API.enabled) saveState();
+    concertFormMode = null;
+    render(currentTab);
+  } catch (e) { alert("削除に失敗しました: " + e.message); }
 }
 
 document.getElementById("tabs").addEventListener("click", (e) => {
@@ -907,4 +980,19 @@ document.getElementById("tabs").addEventListener("click", (e) => {
   if (btn) render(btn.dataset.tab);
 });
 
-render("chart");
+/* 初期化：DB(API)から読み込み。失敗時は localStorage にフォールバック */
+async function init() {
+  try {
+    let concerts = await API.listConcerts();
+    API.enabled = true;
+    if (!concerts.length) concerts = [await API.createConcert({ name: "公演 1", date: "", time: "" })];
+    state = { concerts, activeId: concerts[0].id, byId: {} };
+    state.byId[state.activeId] = await API.getSeats(state.activeId);
+  } catch (e) {
+    API.enabled = false;
+    console.warn("DB(API)に接続できないため localStorage を使用します:", e.message);
+    state = loadState();
+  }
+  render("chart");
+}
+init();
